@@ -1,17 +1,39 @@
+import * as Location from 'expo-location';
 import { StatusBar } from "expo-status-bar"
-;import React from "react";
+;import React, { useEffect, useState } from "react";
 import { View , StyleSheet, Text, ScrollView, Dimensions } from "react-native";
 
 const { width:SCREEN_WIDTH } = Dimensions.get("window");
 
-console.log(SCREEN_WIDTH);
+const API_KEY = "d4aa61fc1cf40274db0323b48b85b194";
 
 export default function App(){
+    const [city, setCity] = useState("Loading...");
+    const [days, setDays] = useState([]);
+    const [ok, Setok] = useState(true);
+    const getWeaher = async() => {
+        const { granted } = await Location.requestForegroundPermissionsAsync();
+        if(!granted){
+            Setok(false);
+        }
+        const {coords:{latitude, longitude}} = await Location.getCurrentPositionAsync({accuracy:5});
+        const location = await Location.reverseGeocodeAsync(
+            {latitude, longitude}, 
+            {useGoogleMaps: false}
+        );
+        setCity(location[0].city);
+        const response = await fetch('https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&exclude=alert&appid=${API_KEY}');
+        const json = await response.json();
+        console.log(json);
+    };
+    useEffect(() => {
+        getWeaher();
+    }, [])
     return (
         <View style={styles.container} >
             <StatusBar style="black" />
             <View style={styles.city}>
-                <Text style={styles.cityname}>Seoul</Text>
+                <Text style={styles.cityname}>{city}</Text>
             </View>
             <ScrollView 
                 pagingEnabled 
